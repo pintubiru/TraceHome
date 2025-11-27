@@ -1,10 +1,10 @@
-# 📡 HomeTrace
+# 📡 TraceHome
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.18+-00ADD8.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 
-**HomeTrace** is a lightweight, web-based local network monitoring tool written in **Go (Golang)**. 
+**TraceHome** is a lightweight, web-based local network monitoring tool written in **Go (Golang)**. 
 It scans your network in real-time, tracks device presence, categorizes users (Family, Guest, IoT), and sends **Telegram notifications** when devices connect or disconnect.
 
 Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
@@ -13,7 +13,7 @@ Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
 
 * **Real-time Monitoring**: Detects when devices join or leave the network.
 * **Web Dashboard**: Clean, responsive UI to view device status (Online/Offline).
-* **Telegram Alerts**: Get instant notifications on your phone via HomeTrace Bot.
+* **Telegram Alerts**: Get instant notifications on your phone via TraceHome Bot.
 * **Device Management**:
     * Categorize devices (Family, Guest, IoT).
     * Rename devices for easy identification.
@@ -33,8 +33,8 @@ Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/username/hometrace.git](https://github.com/username/hometrace.git)
-    cd hometrace
+    git clone https://github.com/pintubiru/TraceHome.git
+    cd TraceHome
     ```
 
 2.  **Install system dependencies**
@@ -46,7 +46,7 @@ Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
 
 3.  **Install Go dependencies**
     ```bash
-    go mod init hometrace
+    go mod init TraceHome
     go mod tidy
     ```
 
