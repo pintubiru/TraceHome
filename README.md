@@ -23,7 +23,7 @@ Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
     * **"Possible Match" Heuristics**: Suggests owners for new devices based on hostname similarity or timing (e.g., if a known device disconnects and a new one appears immediately, it might be the same device with a randomized MAC).
 * **Lightweight**: Built with the Gin Framework and uses JSON for local storage (no heavy database required).
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 * **Linux OS** (Debian, Ubuntu, Raspbian, etc.)
 * **Go** (Golang) installed (version 1.18 or higher)
