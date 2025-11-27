@@ -1,4 +1,4 @@
-# 📡 TraceHome
+# TraceHome
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.18+-00ADD8.svg)
@@ -9,7 +9,7 @@ It scans your network in real-time, tracks device presence, categorizes users (F
 
 Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
 
-## ✨ Features
+## Features
 
 * **Real-time Monitoring**: Detects when devices join or leave the network.
 * **Web Dashboard**: Clean, responsive UI to view device status (Online/Offline).
@@ -29,7 +29,7 @@ Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
 * **Go** (Golang) installed (version 1.18 or higher)
 * **arp-scan** (System dependency for scanning)
 
-## 🚀 Installation
+## Installation
 
 1.  **Clone the repository**
     ```bash
@@ -66,7 +66,7 @@ Designed to run on Linux machines (Raspberry Pi, Ubuntu Server, etc.).
     TELEGRAM_CHAT_ID=your_chat_id_here
     ```
 
-## 🏃‍♂️ Usage
+## Usage
 
 Since `arp-scan` requires root privileges to scan the network properly, you must run the application with `sudo`.
 
