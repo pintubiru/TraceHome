@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>User Detail</title>
+        <style>
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                background: #f0f2f5;
+                padding: 20px;
+                max-width: 800px;
+                margin: 0 auto;
+                color: #333;
+            }
+
+            .header {
+                background: white;
+                padding: 25px;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                position: relative;
+            }
+            h1 {
+                margin: 0 0 10px 0;
+                color: #1a1a1a;
+            }
+            .info-item {
+                color: #666;
+                margin-bottom: 8px;
+                font-size: 0.95rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .label {
+                font-weight: 600;
+                color: #444;
+                width: 80px;
+            }
+            .value {
+                background: #f8f9fa;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+
+            .back-btn {
+                display: inline-block;
+                margin-bottom: 15px;
+                text-decoration: none;
+                color: #3498db;
+                font-weight: 600;
+            }
+            .back-btn:hover {
+                text-decoration: underline;
+            }
+
+            .btn-delete {
+                background-color: #fff;
+                color: #e74c3c;
+                border: 1px solid #e74c3c;
+                padding: 8px 15px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                margin-top: 15px;
+                transition: all 0.2s;
+            }
+            .btn-delete:hover {
+                background-color: #e74c3c;
+                color: white;
+            }
+
+            table {
+                width: 100%;
+                background: white;
+                border-collapse: collapse;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            }
+            th,
+            td {
+                padding: 15px;
+                text-align: left;
+                border-bottom: 1px solid #eee;
+            }
+            th {
+                background: #f8f9fa;
+                font-weight: 600;
+                color: #555;
+                font-size: 0.9rem;
+            }
+            tr:last-child td {
+                border-bottom: none;
+            }
+
+            .tag {
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .tag-con {
+                background: #e8f5e9;
+                color: #2ecc71;
+            }
+            .tag-dis {
+                background: #ffebee;
+                color: #e74c3c;
+            }
+
+            .time {
+                color: #888;
+                font-size: 0.9rem;
+                font-family: monospace;
+            }
+            .detail-text {
+                font-size: 0.9rem;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="/" class="back-btn">← Back to Dashboard</a>
+
+        <div class="header">
+            <h1 id="user-name">Loading...</h1>
+            <div class="info-item">
+                <span class="label">MAC:</span>
+                <span class="value" id="user-mac">...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Host:</span>
+                <span id="user-hostname">-</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Vendor:</span>
+                <span id="user-vendor">-</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Status:</span>
+                <span id="user-status">...</span>
+            </div>
+
+            <button onclick="deleteUser()" class="btn-delete">
+                🗑️ Delete This User
+            </button>
+        </div>
+
+        <h3>📜 Activity Log</h3>
+        <table id="log-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="log-body">
+                <tr>
+                    <td colspan="3" style="text-align: center">
+                        Loading logs...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <script>
+            const path = window.location.pathname;
+            const mac = path.split("/").pop();
+
+            async function loadDetail() {
+                try {
+                    const res = await fetch("/api/logs/" + mac);
+                    const data = await res.json();
+
+                    const u = data.user;
+                    document.getElementById("user-name").innerText =
+                        u.name || "Unknown Device";
+                    document.getElementById("user-mac").innerText =
+                        u.mac || mac;
+
+                    document.getElementById("user-hostname").innerText =
+                        u.hostname || "-";
+                    document.getElementById("user-vendor").innerText =
+                        u.vendor || "-";
+
+                    const statusElem = document.getElementById("user-status");
+                    statusElem.innerText = u.status || "Unknown";
+                    statusElem.style.color =
+                        u.status === "ONLINE" ? "#2ecc71" : "#e74c3c";
+                    statusElem.style.fontWeight = "bold";
+
+                    // Render Table
+                    const tbody = document.getElementById("log-body");
+                    if (data.logs.length === 0) {
+                        tbody.innerHTML =
+                            '<tr><td colspan="3" style="text-align:center; padding:30px; color:#999;">No activity recorded yet.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = "";
+                    data.logs.forEach((log) => {
+                        const date = new Date(log.timestamp);
+                        const timeStr = date.toLocaleString("en-US", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                        });
+
+                        const isConnect = log.action === "CONNECTED";
+                        const tagClass = isConnect ? "tag-con" : "tag-dis";
+                        const actionText = isConnect
+                            ? "CONNECTED"
+                            : "DISCONNECTED";
+
+                        tbody.innerHTML += `
+                        <tr>
+                            <td class="time">${timeStr}</td>
+                            <td><span class="tag ${tagClass}">${actionText}</span></td>
+                            <td class="detail-text">${log.detail}</td>
+                        </tr>
+                    `;
+                    });
+                } catch (err) {
+                    console.error(err);
+                    alert("Failed to load data");
+                }
+            }
+
+            async function deleteUser() {
+                if (
+                    !confirm(
+                        "Are you sure you want to delete this user? \n(History logs will remain)",
+                    )
+                )
+                    return;
+
+                try {
+                    const res = await fetch("/api/users/" + mac, {
+                        method: "DELETE",
+                    });
+
+                    if (res.ok) {
+                        alert("User successfully deleted.");
+                        window.location.href = "/";
+                    } else {
+                        alert("Failed to delete user.");
+                    }
+                } catch (e) {
+                    alert("Connection error.");
+                }
+            }
+
+            loadDetail();
+            setInterval(loadDetail, 5000);
+        </script>
+    </body>
+</html>

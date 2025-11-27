@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Smart Monitor</title>
+        <style>
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                background: #f0f2f5;
+                padding: 20px;
+                max-width: 900px;
+                margin: 0 auto;
+                color: #333;
+            }
+
+            .section-title {
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: #666;
+                text-transform: uppercase;
+                margin: 25px 0 10px 5px;
+                border-bottom: 2px solid #e0e0e0;
+                padding-bottom: 5px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 15px;
+            }
+
+            .card {
+                background: white;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                border-left: 5px solid #ddd;
+                transition: transform 0.2s;
+            }
+            .card:hover {
+                transform: translateY(-3px);
+            }
+            .card a {
+                text-decoration: none;
+                color: inherit;
+                display: block;
+            }
+
+            .online {
+                border-left-color: #2ecc71;
+            }
+            .offline {
+                border-left-color: #95a5a6;
+                opacity: 0.8;
+            }
+            .unknown {
+                border-left-color: #f1c40f;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                margin-bottom: 8px;
+            }
+            .name {
+                font-weight: 700;
+                font-size: 1.1rem;
+            }
+            .status-badge {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+                border-radius: 10px;
+                font-weight: bold;
+                background: #eee;
+                white-space: nowrap;
+            }
+            .badge-on {
+                background: #e8f5e9;
+                color: #2ecc71;
+            }
+
+            .details {
+                font-size: 0.85rem;
+                color: #666;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+            }
+            .device-name {
+                font-weight: 600;
+                color: #34495e;
+                background: #eef2f7;
+                padding: 2px 5px;
+                border-radius: 4px;
+                display: inline-block;
+                margin-bottom: 3px;
+            }
+
+            /* MATCH SUGGESTION */
+            .match-alert {
+                background: #f3e5f5;
+                color: #8e24aa;
+                padding: 5px 8px;
+                border-radius: 4px;
+                font-size: 0.8rem;
+                margin-top: 8px;
+                border: 1px dashed #ce93d8;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            /* Form Register */
+            .reg-box {
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px solid #eee;
+            }
+            .reg-row {
+                display: flex;
+                gap: 5px;
+                margin-bottom: 5px;
+            }
+            input,
+            select {
+                padding: 6px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                flex: 1;
+                font-size: 0.9rem;
+            }
+            button {
+                background: #3498db;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div
+            style="
+                margin-bottom: 20px;
+                display: flex;
+                justify-content: flex-end;
+            "
+        >
+            <a
+                href="/unknowns"
+                style="
+                    background: #e67e22;
+                    color: white;
+                    text-decoration: none;
+                    padding: 8px 15px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                "
+            >
+                🕵️ View Unknown Device History
+            </a>
+        </div>
+        <div id="registered-container"></div>
+
+        <div class="section-title">
+            🔍 New / Unknown Devices <span id="count-unknown">0</span>
+        </div>
+        <div class="grid" id="unknown-list">
+            <div style="padding: 20px; color: #999">Scanning network...</div>
+        </div>
+
+        <script>
+            const GROUPS = ["Family", "Guest", "IoT"];
+            const GROUP_LABELS = {
+                Family: "👨‍👩‍👧‍👦 Family",
+                Guest: "👤 Guest",
+                IoT: "🤖 IoT",
+            };
+
+            async function loadData() {
+                try {
+                    const res = await fetch("/api/status");
+                    const data = await res.json();
+                    renderRegistered(data.known);
+                    renderUnknown(data.unknown);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            function renderRegistered(users) {
+                const container = document.getElementById(
+                    "registered-container",
+                );
+                container.innerHTML = "";
+
+                GROUPS.forEach((group) => {
+                    const groupUsers = users.filter(
+                        (u) => (u.group || "Family") === group,
+                    );
+                    if (groupUsers.length > 0) {
+                        const title = GROUP_LABELS[group] || group;
+                        let html = `<div class="section-title">${title} <span>${groupUsers.length}</span></div>`;
+                        html += `<div class="grid">`;
+
+                        groupUsers.sort((a, b) =>
+                            a.status === "ONLINE" ? -1 : 1,
+                        );
+
+                        groupUsers.forEach((u) => {
+                            const isOnline = u.status === "ONLINE";
+                            const dispDevice =
+                                u.hostname || u.vendor || "Unknown";
+
+                            html += `
+                        <div class="card ${isOnline ? "online" : "offline"}">
+                            <a href="/details/${u.mac}">
+                                <div class="header">
+                                    <span class="name">${u.name}</span>
+                                    <span class="status-badge ${isOnline ? "badge-on" : ""}">
+                                        ${isOnline ? "HOME" : u.minutes_ago + "m AGO"}
+                                    </span>
+                                </div>
+                                <div class="details">
+                                    <div><span class="device-name">📱 ${dispDevice}</span></div>
+                                    <div>📡 ${u.ip}</div>
+                                </div>
+                            </a>
+                        </div>`;
+                        });
+                        html += `</div>`;
+                        container.innerHTML += html;
+                    }
+                });
+            }
+
+            function renderUnknown(devices) {
+                const container = document.getElementById("unknown-list");
+                document.getElementById("count-unknown").innerText =
+                    devices.length;
+
+                if (
+                    document.activeElement.tagName === "INPUT" ||
+                    document.activeElement.tagName === "SELECT"
+                )
+                    return;
+
+                if (devices.length === 0) {
+                    container.innerHTML =
+                        '<div style="grid-column: 1/-1; color:#aaa; font-style:italic;">No unknown devices detected.</div>';
+                    return;
+                }
+
+                let html = "";
+                devices.forEach((d) => {
+                    const dispDevice =
+                        d.hostname || d.vendor || "Unknown Device";
+
+                    let matchHtml = "";
+                    let suggestedName = "";
+                    if (d.possible_match) {
+                        suggestedName = d.possible_match;
+                        matchHtml = `
+                    <div class="match-alert">
+                        <span>💡 Looks like <b>${d.possible_match}</b> (Hostname Match)</span>
+                    </div>`;
+                    }
+
+                    html += `
+                <div class="card unknown">
+                    <div class="header">
+                        <span class="name">Unknown</span>
+                        <span class="status-badge badge-on">NEW</span>
+                    </div>
+                    <div class="details">
+                        <div><span class="device-name">📱 ${dispDevice}</span></div>
+                        <div style="font-size:0.8em; color:#7f8c8d">Vendor: ${d.vendor}</div>
+                        <div>📡 ${d.ip}</div>
+                        <div style="font-family:monospace; font-size:0.8em">${d.mac}</div>
+                    </div>
+
+                    ${matchHtml}
+
+                    <div class="reg-box">
+                        <div class="reg-row">
+                            <input type="text" id="name-${d.mac}" placeholder="Name..." value="${suggestedName}">
+                            <select id="group-${d.mac}">
+                                <option value="Family">Family</option>
+                                <option value="Guest">Guest</option>
+                                <option value="IoT">IoT</option>
+                            </select>
+                        </div>
+                        <div class="reg-row" style="justify-content:space-between">
+                             <label style="font-size:0.8rem; display:flex; align-items:center;">
+                                <input type="checkbox" id="notify-${d.mac}" checked style="margin-right:5px"> Notify
+                            </label>
+                            <button onclick="register('${d.mac}', '${d.ip}', '${d.vendor}', '${d.hostname || ""}')">Save</button>
+                        </div>
+                    </div>
+                </div>`;
+                });
+                container.innerHTML = html;
+            }
+
+            async function register(mac, ip, vendor, hostname) {
+                const name = document.getElementById(`name-${mac}`).value;
+                const group = document.getElementById(`group-${mac}`).value;
+                const notify = document.getElementById(`notify-${mac}`).checked;
+
+                if (!name) return alert("Please enter a name!");
+
+                await fetch("/api/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name,
+                        mac,
+                        ip,
+                        vendor,
+                        hostname,
+                        group,
+                        notify,
+                    }),
+                });
+                loadData();
+            }
+
+            loadData();
+            setInterval(loadData, 5000);
+        </script>
+    </body>
+</html>
